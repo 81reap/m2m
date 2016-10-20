@@ -1,4 +1,5 @@
 #!/bin/bash
+# dependencies: jq, sed, echo, curl
 
 # local variables
 version=0.1
@@ -49,8 +50,8 @@ uFile(){
   elif [[ $1 == *.md && -f $1 ]];then
     echo "file found"
     value=$(<$1)
-    curl -s -i -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -H "Accept: application/json" https://api.medium.com/v1/me
-    echo ""
+    response=$(curl -sb -I -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -H "Accept: application/json" https://api.medium.com/v1/me)
+    echo $response | jq -r ".data.id"
   else
     echo "$1 is not a valid markdown file"
     exit 1
