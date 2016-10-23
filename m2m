@@ -49,9 +49,17 @@ uFile(){
     exit 1
   elif [[ $1 == *.md && -f $1 ]];then
     echo "file found"
-    value=$(<$1)
-    response=$(curl -sb -I -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -H "Accept: application/json" https://api.medium.com/v1/me)
-    echo $response | jq -r ".data.id"
+
+    VALUE=$(<$1)
+    TITLE=$(echo "$VALUE" | sed -n '/^---$/,/^---$/p')
+    CONTENT=$(echo "$VALUE" | sed '/---/,/---/d')
+
+#to-do: ge the title, format (markdown), content, tags, publishStatus (draft)
+
+    RESPONSE=$(curl -sb -I -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -H "Accept: application/json" https://api.medium.com/v1/me)
+    id=$(echo $response | jq -r ".data.id")
+    echo $id
+#$response=$(curl -sb -I -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -H "Accept: application/json" -X POST -d "{'title': '$TITLE','contentFormat': 'markdown','content': $CONTENT,'tags': $TAGS,'publishStatus': 'draft'}" https://api.medium.com/v1/me)
   else
     echo "$1 is not a valid markdown file"
     exit 1
