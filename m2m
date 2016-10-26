@@ -51,7 +51,7 @@ uFile(){
     echo "file found"
 
     VALUE=$(<$1)
-    TITLE=$(echo "$VALUE" | sed -n '/^---$/,/^---$/p')
+    METADATA=$(echo "$VALUE" | sed -n '/^---$/,/^---$/p')
     CONTENT=$(echo "$VALUE" | sed '/---/,/---/d')
 
 #to-do: ge the title, format (markdown), content, tags, publishStatus (draft)
