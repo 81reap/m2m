@@ -1,5 +1,5 @@
 #!/bin/bash
-# dependencies: jq, sed, echo, curl
+# dependencies: jq, cat, shyaml, sed, echo, curl
 
 # local variables
 version=0.1
@@ -50,9 +50,10 @@ uFile(){
   elif [[ $1 == *.md && -f $1 ]];then
     echo "file found"
 
-    VALUE=$(<$1)
-    METADATA=$(echo "$VALUE" | sed -n '/^---$/,/^---$/p')
-    CONTENT=$(echo "$VALUE" | sed '/---/,/---/d')
+    METADATA=$(sed '/---/,/---/!d;/---/d' $1)
+    CONTENT=$(sed '/---/,/---/d' $1)
+
+    echo "$(echo $METADATA | shyaml title)"
 
 #to-do: ge the title, format (markdown), content, tags, publishStatus (draft)
 
