@@ -1,5 +1,5 @@
 #!/bin/bash
-# dependencies: jq, cat, shyaml, sed, echo, curl
+# dependencies: jq, ruby, sed, echo, curl
 
 # local variables
 version=0.1
@@ -17,6 +17,12 @@ usage(){
   echo ""
   echo "Source: "
   echo "Bugs: "
+}
+
+# converts YAMl to JSON
+function y2j(){
+    ruby -ryaml -rjson -e \
+         'puts JSON.pretty_generate(YAML.load(ARGF))' $*
 }
 
 # saving OAUTH token in .bash_profile or .profile
@@ -53,13 +59,29 @@ uFile(){
     METADATA=$(sed '/---/,/---/!d;/---/d' $1)
     CONTENT=$(sed '/---/,/---/d' $1)
 
-    echo "$(echo $METADATA | shyaml title)"
+    TITLE=$(echo "$METADATA" | y2j | jq -r '.title')
+    TAGS=()
+    i=0
+    while [ $i -lt 5 ]; do
+      TMP=$(echo "$METADATA" | y2j | jq -r ".tag[$i]")
+      if test "$TMP" == "null";then
+        break
+      fi
+      TAGS+=("$TMP")
+      let i+=1
+    done
 
-#to-do: ge the title, format (markdown), content, tags, publishStatus (draft)
+    #for j in "${TAGS[@]}"; do
+    #  echo $j
+    #done
+
+#to-do: get the title, format (markdown), content, tags, publishStatus (draft)
 
     RESPONSE=$(curl -sb -I -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -H "Accept: application/json" https://api.medium.com/v1/me)
+    # echo $RESPONSE
+
     id=$(echo $response | jq -r ".data.id")
-    echo $id
+    # echo $id
 #$response=$(curl -sb -I -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -H "Accept: application/json" -X POST -d "{'title': '$TITLE','contentFormat': 'markdown','content': $CONTENT,'tags': $TAGS,'publishStatus': 'draft'}" https://api.medium.com/v1/me)
   else
     echo "$1 is not a valid markdown file"
