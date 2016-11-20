@@ -7,7 +7,7 @@ version=0.1
 # quick manual
 usage(){
   echo "Usage: m2m <-h|--help> <-v|--version> <-t|--token> <token from medium>"
-  echo "           <-r|--remove> <path to markdown file>"
+  echo "           <-r|--remove> \"<path to markdown file>\""
   echo ""
   echo "Options:"
   echo "  -h, --help		Output usage info"
@@ -53,36 +53,66 @@ uFile(){
     echo "Token not set"
     usage
     exit 1
-  elif [[ $1 == *.md && -f $1 ]];then
+  elif [[ "$1" == *.md && -f "$1" ]];then
     echo "file found"
 
-    METADATA=$(sed '/---/,/---/!d;/---/d' $1)
-    CONTENT=$(sed '/---/,/---/d' $1)
+    METADATA=$(sed '/---/,/---/!d;/---/d' "$1")
+    CONTENT=$(sed '/---/,/---/d' "$1")
 
     TITLE=$(echo "$METADATA" | y2j | jq -r '.title')
-    TAGS=()
+    TAGS="["
     i=0
     while [ $i -lt 5 ]; do
       TMP=$(echo "$METADATA" | y2j | jq -r ".tag[$i]")
       if test "$TMP" == "null";then
         break
       fi
-      TAGS+=("$TMP")
+      TAGS="$TAGS\"$TMP\","
       let i+=1
     done
-
-    #for j in "${TAGS[@]}"; do
-    #  echo $j
-    #done
+    TAGS="${TAGS%?}]"
 
 #to-do: get the title, format (markdown), content, tags, publishStatus (draft)
 
-    RESPONSE=$(curl -sb -I -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -H "Accept: application/json" https://api.medium.com/v1/me)
-    # echo $RESPONSE
+    RESPONSE=$(curl -sb -I\
+      -H "Authorization: Bearer $TOKEN"\
+      -H "Content-Type: application/json"\
+      -H "Accept: application/json"\
+      https://api.medium.com/v1/me)
+echo $RESPONSE
+echo ""
+#
+#    if test "$RESPONSE" == "";then
+#      echo "Error getting profile. Please check youe acess token and your internet connection."
+#      exit
+#    fi
+#
+    id=$(echo "$RESPONSE" | jq -r ".data.id")
+    RESPONSE=$(curl -sb -I\
+      -H "Authorization: Bearer $TOKEN"\
+      -H "Content-Type: application/json"\
+      -H "Accept: application/json"\
+      https://api.medium.com/v1/users/$id/publications)
+    echo $RESPONSE
+    #printf "$CONTENT \n"
+    echo $CONTENT
 
-    id=$(echo $response | jq -r ".data.id")
-    # echo $id
-#$response=$(curl -sb -I -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -H "Accept: application/json" -X POST -d "{'title': '$TITLE','contentFormat': 'markdown','content': $CONTENT,'tags': $TAGS,'publishStatus': 'draft'}" https://api.medium.com/v1/me)
+    response=$(curl -sb -I\
+      -H "Authorization: Bearer $TOKEN"\
+      -H "Content-Type: application/json"\
+      -H "Accept: application/json"\
+      -H "Accept-Charset: utf-8"\
+      -X POST\
+      -d "{\
+        \"title\": \"$TITLE\",\
+        \"contentFormat\": \"markdown\",\
+        \"content\": \"$CONTENT\",\
+        \"tags\": $TAGS,\
+        \"publishStatus\": \"draft\"\
+      }"\
+      https://api.medium.com/v1/users/$id/posts)
+   echo $response
+
   else
     echo "$1 is not a valid markdown file"
     exit 1
@@ -114,7 +144,7 @@ do
     ;;
 # file
     *)
-    uFile $1
+    uFile "$1"
     ;;
   esac
   shift
