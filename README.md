@@ -4,11 +4,11 @@ A bash script to upload markdown files to [Medium](https://medium.com).
 
 ## Table of Contents
 
- [Installation](#Installation)
-  [Homebrew](#Homebrew)
-  [Manual](#Manual)
- [Usage](#Usage)
-  [Initial Setup](#Initial-Setup)
+ [Installation](#Installation)  
+  [Homebrew](#Homebrew)  
+  [Manual](#Manual)  
+ [Usage](#Usage)  
+  [Initial Setup](#Initial-Setup)  
  [License](#License)
 
 ## Installation
